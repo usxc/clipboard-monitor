@@ -18,6 +18,13 @@ class ClipboardMonitorApp:
         self.root.resizable(True, True)
         self.root.minsize(320, 200)
 
+        # ツールバー（クリアボタン配置）
+        self.toolbar = tk.Frame(self.root)
+        self.toolbar.pack(fill="x")
+
+        self.clear_btn = tk.Button(self.toolbar, text="クリア", command=self._on_clear)
+        self.clear_btn.pack(side="right", padx=6, pady=6)
+
         # テキストボックス（複数行）
         self.text = tk.Text(self.root, wrap="word")
         self.text.pack(fill="both", expand=True)
@@ -28,6 +35,7 @@ class ClipboardMonitorApp:
         # フォントはウィンドウサイズに応じて可変
         self.font = tkfont.Font(family="Meiryo", size=self.base_font_size)
         self.text.configure(font=self.font)
+        self.clear_btn.configure(font=self.font)
 
         # 直近のテキスト内容
         self._last_text: str | None = None
@@ -78,6 +86,17 @@ class ClipboardMonitorApp:
         new_size = max(8, min(new_size, 36))
         if new_size != self.font.cget("size"):
             self.font.configure(size=new_size)
+
+    def _on_clear(self) -> None:
+        """クリップボードを空文字でクリアし、表示も即時反映する。"""
+        try:
+            self.root.clipboard_clear()
+            self.root.clipboard_append("")
+        except TclError:
+            pass
+        # 表示と内部状態を同期して空にする
+        self._last_text = ""
+        self._update_textbox("")
 
 
 def main() -> None:
