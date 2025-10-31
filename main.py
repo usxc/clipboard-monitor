@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import TclError
+from tkinter import TclError, font as tkfont
 
 
 POLL_INTERVAL_MS = 500  # 監視間隔（ミリ秒）。必要に応じて調整
@@ -10,26 +10,33 @@ class ClipboardMonitorApp:
         self.root = root
         self.root.title("クリップボード監視")
 
-        # ウィンドウは固定サイズ（リサイズ不可）
-        self.root.geometry("640x400")
-        self.root.resizable(False, False)
+        self.base_width = 640
+        self.base_height = 400
+        self.base_font_size = 10
+
+        self.root.geometry(f"{self.base_width}x{self.base_height}")
+        self.root.resizable(True, True)
+        self.root.minsize(320, 200)
 
         # テキストボックス（複数行）
-        self.text = tk.Text(
-            self.root,
-            wrap="word",
-            font=("Meiryo", 10),  # Windows向けに日本語フォントを指定（未インストールでも動作に支障なし）
-        )
+        self.text = tk.Text(self.root, wrap="word")
         self.text.pack(fill="both", expand=True)
 
         # ユーザー編集を防ぐ（表示専用）。更新時のみ一時的に有効にする
         self.text.configure(state=tk.DISABLED)
+
+        # フォントはウィンドウサイズに応じて可変
+        self.font = tkfont.Font(family="Meiryo", size=self.base_font_size)
+        self.text.configure(font=self.font)
 
         # 直近のテキスト内容
         self._last_text: str | None = None
 
         # 起動時に監視開始
         self._schedule_next_poll()
+
+        # リサイズに応じてフォントサイズ調整
+        self.root.bind("<Configure>", self._on_configure)
 
     def _schedule_next_poll(self) -> None:
         self.root.after(POLL_INTERVAL_MS, self._poll_clipboard)
@@ -58,6 +65,20 @@ class ClipboardMonitorApp:
         # 次回のポーリングを予約
         self._schedule_next_poll()
 
+    def _on_configure(self, event: tk.Event) -> None:
+        # ウィンドウの実サイズを取得して基準比でフォントサイズを決定
+        width = max(1, self.root.winfo_width())
+        height = max(1, self.root.winfo_height())
+        if width <= 1 or height <= 1:
+            return
+        w_scale = width / self.base_width
+        h_scale = height / self.base_height
+        scale = min(w_scale, h_scale)
+        new_size = int(self.base_font_size * scale)
+        new_size = max(8, min(new_size, 36))
+        if new_size != self.font.cget("size"):
+            self.font.configure(size=new_size)
+
 
 def main() -> None:
     root = tk.Tk()
@@ -67,4 +88,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
