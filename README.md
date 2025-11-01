@@ -21,6 +21,7 @@ Python 3.10 + tkinterだけで動く、Windows向けのテキスト専用クリ�
 ![メイン画面](docs/screenshots/クリップボード監視.png)
 
 - 履歴ウィンドウ
+  
 ![履歴ウィンドウ](docs/screenshots/クリップボード履歴.png)
 
 ## クイックスタート
